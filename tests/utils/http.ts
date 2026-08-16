@@ -1,6 +1,6 @@
 export type MockFetch = ReturnType<typeof createMockFetch>;
 
-/** Creates a jest-compatible mock fetch that records calls. */
+/** Creates a mock fetch that records calls. */
 export function createMockFetch(responses: Response[] = []) {
   const calls: Request[] = [];
   const queue = [...responses];
