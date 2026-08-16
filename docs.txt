@@ -1,0 +1,1418 @@
+Developer API Reference
+   Back to wiki home
+To make a request to the Developer API, make a POST request to https://api.voxel.shop/v1/api-action-here. For example, to verify a user token, you would make a POST request to https://api.voxel.shop/v1/verifyAuthToken/
+
+More info about all of the API actions available to you are given below. Make sure to send all of the parameters in POST data (unless otherwise stated).
+
+The response will be in JSON format, like this: { "request": { ... }, "response": { ... } }. You can get more info about the response formats below.
+
+If there's an API action that you would like to use but you don't see here, shoot us a message and we'll add it!
+
+Most responses currently stringify most values by default. If you would like to turn this off, pass stringify = 0 as a GET or POST parameter, like https://api.voxel.shop/v1/search?stringify=0
+
+General Actions
+/v1/status — Check the status of the Polymart API
+/v1/search — Search for a resource on Polymart
+
+
+Actions for Minecraft Plugins
+/v1/verifyPurchase — Verify that a give user has in-fact purchased the given resource on Polymart
+/v1/requestUpdateURL — Request a URL that can be used to download the latest version of a resource. This should be used inside of your resource (for example, in the .jar file of a plugin). This will verify that the jar was actually purchased and downloaded from Polymart. If it was, then you'll get a URL. Otherwise, this call will fail.
+If you're looking for something that can be used to download a resource on behalf of a user (for example, if you're a Minecraft server host and want to give users access to download resources directly from your control panel), you should use /v1/getDownloadURL instead
+/v1/downloadLatestUpdate — DEPRECATED use /v1/requestUpdateURL instead — A simpler alternative to /v1/requestUpdateURL which will download an update if one is available and all the security checks have been passed, or return an error otherwise
+
+Actions for Resources
+/v1/getResourceInfo — Get information about a resource
+/v1/getResourceInfoSimple — Get a single, raw data point about a resource (no JSON encoding)
+/v1/getResourceUpdates — Gets a list of updates to a resource
+/v1/postUpdate — Upload a new version for one of your resources
+/v1/getResourceUserData — Get info about a resource purchase for a given resource and user. DON'T use this if you want to verify a download. Instead, use /v1/verifyPurchase
+/v1/addBuyer — Add a buyer to your resource by their username or user id
+/v1/importExternalBuyer — Import a buyer from another platform to Polymart
+/v1/addCouponCode — Add a coupon code to your resource
+
+Actions for Resource Managers
+/v1/generateUserVerifyURL — Generate a URL that can be used to verify a user (useful for verifying a discord account, etc)
+/v1/verifyUser — After sending the user to the URL at /v1/generateUserVerifyURL, they'll get a token. Pass the token here to verify the user
+/v1/getAccountInfo — Get information about a user based on their user ID. If you need to verify a user's user ID, use /v1/verifyUser
+/v1/getUserId — Get a user's user ID from their username. If you need to verify a user's user ID, use /v1/verifyUser
+
+
+Actions for Resource Authors
+/v1/getUserData — get information about a user. This can only be used by resource authors
+/v1/listBuyers — list buyers on a resource. This can only be used by resource authors
+
+
+Actions for Hosts, Control Panels, and Platforms
+/v1/authorizeUser — Get a token you can use to take actions Polymart on a user's behalf. For example, for a hosting site to allow users to download resources directly
+/v1/verifyAuthToken — Verify that a token received from /v1/authorizeUser is valid
+/v1/invalidateAuthToken — Invalidate a token received from /v1/authorizeUser
+/v1/getDownloadURL — get a URL that you can use to download a resource from Polymart on a user's behalf. This is useful for Minecraft server hosts
+/v1/status Back to top
+Check the status of the Polymart API.
+
+If the Polymart API is up and running, the response body will be "ok", and the HTTP response code will be 200. To validate that the API is up and running, make sure that the response body is "ok", and the response code is 200.
+
+Any other responses indicate that something isn't quite working with the API. If the extremely unlikely event that this happens, please send us a message and include the HTTP response code and response body, and we'll work to resolve the issues!
+Usage
+Here's an example API call
+
+https://api.voxel.shop/v1/status
+/v1/search Back to top
+Search Polymart for resources. In this API call, almost all parameters could either be in the GET parameters of the request or the POST parameters (with the exception of token, which must be a POST parameter).
+Parameters
+query — optional — Search terms that you would like to look up on Polymart. This will search through titles and subtitles of resouces. Everything that isn't a number, letter, or space is automatically deleted.
+
+sort — optional — how the results should be ordered. For now, this can be "updated", "created", "downloads", "random", and "relevant". By default, this is "updated"
+
+premium — optional — if you pass a "1" for this parameter, only premium resources will be returned. If you pass a "0", only free resources will be returned. If you pass something else, or don't pass anything, then resources will be returned regardless of whether or not they're premium.
+
+referrer — optional — If you want to generate URLs with your referral code in them, pass your Polymart User ID to this parameter .
+
+start — optional — the index that searching should start from. By default this is 0.
+
+limit — optional — the maximum number of results that can be returned. By default, this is 25, but you can set this to anything between 5 and 25.
+
+token — optional — if this is passed, it MUST be passed as a POST parameter. If you have a token for a given user, you can pass it here. Then, canDownload for each result will be true if the user has purchased the resource and can download it, or false otherwise. If you don't pass token, canDownload will always be false for premium resources
+Response
+Format
+{
+    "request": "...",
+    "response": {
+        "success": "",
+        "result_count": "",
+        "more": "",
+        "next_start": "",
+        "total": "",
+        "remaining": "",
+        "result": [
+            {
+                "id": "",
+                "url": "",
+                "owner": {
+                    "type": "",
+                    "id": "",
+                    "name": "",
+                    "url": ""
+                },
+                "price": "",
+                "currency": "",
+                "title": "",
+                "subtitle": "",
+                "version": "",
+                "creationTime": "",
+                "lastUpdateTime": "",
+                "supportedServerSoftware": "",
+                "supportedLanguages": "",
+                "supportedMinecraftVersions": "",
+                "donationLink": "",
+                "thumbnailURL": "",
+                "headerURL": "",
+                "canDownload": ""
+            },
+            {
+                "...": ""
+            },
+            {
+                "...": ""
+            }
+        ]
+    }
+}
+Example
+{
+    "request": "...",
+    "response": {
+        "success": true,
+        "result_count": 2,
+        "more": true,
+        "next_start": 2,
+        "total": 8,
+        "remaining": 6,
+        "result": [
+            {
+                "id": "1",
+                "url": "https://voxel.shop/product/1/custom-items",
+                "owner": {
+                    "type": "user",
+                    "id": "1",
+                    "name": "jojodmo",
+                    "url": "https://voxel.shop/u/jojodmo.1"
+                },
+                "price": "16.00",
+                "currency": "USD",
+                "title": "Custom Items",
+                "subtitle": "Design Custom Items",
+                "version": "2.17.3",
+                "creationTime": "1786702152",
+                "lastUpdateTime": "1786894886",
+                "supportedServerSoftware": null,
+                "supportedLanguages": "English & Spanish",
+                "supportedMinecraftVersions": "1.8 - 1.16",
+                "donationLink": null,
+                "thumbnailURL": "https://s3.amazonaws.com/polymart.product.thumbnails/default/1",
+                "headerURL": "https://s3.amazonaws.com/polymart.product.headerimages/default/1",
+                "canDownload": false
+            },
+            {
+                "id": "323",
+                "url": "https://voxel.shop/r/polymart-plugin.323",
+                "owner": {
+                    "type": "shop",
+                    "id": "1",
+                    "name": "Polymart",
+                    "url": "https://voxel.shop/shop/polymart.1"
+                },
+                "title": "Polymart Plugin",
+                "subtitle": "Auto Updater | Keep ALL your plugins up to date (including premium ones!) | Official Polymart Plugin",
+                "version": "1.2.6",
+                "creationTime": "1786702152",
+                "lastUpdateTime": "1786894886",
+                "canDownload": true,
+                "...": ""
+            }
+        ]
+    }
+}
+Keep in mind that thumbnailURL and headerURL are the expected locations of the images. If the image does not exist, you'll get a 404 error.
+Usage
+Here's an example API call
+
+https://api.voxel.shop/v1/search
+   ?limit=5
+   &start=0
+   &query=item
+   &sort=lastUpdateTime
+   &premium=any
+/v1/verifyPurchase Back to top
+This only works for premium resources. We recommend that you also verify the status of the Polymart API using /v1/status first.
+
+Verifies that a given user has in-fact downloaded a resource from Polymart. The parameters can be provided either as GET or as POST parameters. REMEMBER that a motivated attacker can always gain access to the source code of your plugin, so if you're using this as a piracy check, it only works as well as you can hide it. We recommend that you also use Polymart's automatic obfuscator to combat piracy.
+Parameters
+NOTE There are two options for verifying purchases. You can either provide license and resource_id in which case you don't have to provide the other placeholders. Or, if you don't provide license, then ALL of the other parameters are required. If you do not provide all of them, verification will always fail. In addition, this API call will only work if the resource as downloaded from Polymart (and not if it was purchased and downloaded on another marketplace). You can use the %%__POLYMART__%% placeholder to check this.
+
+license — the Polymart license key for this download. You can use the %%__LICENSE__%% placeholder for this. You need to provide either this license parameter AND resource_id, or ALL of the parameters (other than license). Note this may contain non-url-safe characters, so should be URL encoded first
+
+license_number — If you used one of the special numbered license placeholders, %%__LICENSE_n__%%, provide n here. For example, if you used %%__LICENSE_7__%% for license, this should be 7
+
+inject_version — the version of the resource injector for this download. You can use the %%__INJECT_VER__%% placeholder for this
+
+resource_id — the ID of the resource in question. You can use the %%__RESOURCE__%% placeholder for this
+
+user_id — the ID of the user in question. You can use the %%__USER__%% placeholder for this
+
+nonce — the nonce given to the download by Polymart. You can use the %%__NONCE__%% placeholder for this
+
+download_agent — the agent that downloaded the resource from Polymart. You can use the %%__AGENT__%% placeholder for this
+
+download_time — the time the resource was downloaded from Polymart. You can use the %%__TIMESTAMP__%% placeholder for this
+
+download_token — the download token from Polymart. You can use the %%__VERIFY_TOKEN__%% placeholder for this
+
+Response
+Format
+{
+    "request": "...",
+    "response": {
+        "success": ""
+    }
+}
+Example
+{
+    "request": "...",
+    "response": {
+        "success": true
+    }
+}
+Usage
+Use this to verify that a given resource download is authentic. For example, using the %%__LICENSE__%% placeholder
+
+https://api.voxel.shop/v1/verifyPurchase/
+   ?license=JxCq-Nv-IPwO
+   &resource_id=4
+
+Or, using %%__VERIFY_TOKEN__%% and other placeholders
+
+https://api.voxel.shop/v1/verifyPurchase/
+   ?download_token=MDAwY2QzZDk0MjdkYWNm
+   &user_id=1
+   &resource_id=4
+   &nonce=7318
+   &inject_version=1
+   &download_agent=000000
+   &download_time=1587928929
+
+All of these parameters should be gathered from %%__PLACEHOLDERS__%% in your resource file. Check the Parameters section above to see which parameter to pass where
+/v1/requestUpdateURL Back to top
+
+
+This only works for premium resources. If you'd like to build an auto-updater for a free resource, go to the resource page and then click "Get Direct Download Link" just below the "Post an Update" button. You can then use this link to provide a direct link for users to download your resource.
+
+Verifies that a given user has in-fact downloaded a resource from Polymart. If they have downloaded the resource from Polymart, requests a download link that can be used to download the resource. The parameters can be provided either as GET or as POST parameters.
+Parameters
+NOTE that ALL of these parameters are required. If you do not provide all of them, verification will always fail. In addition, this API call will only work if the resource as downloaded from Polymart (and not if it was purchased and downloaded on another marketplace). You can use the %%__POLYMART__%% placeholder to check this.
+
+allow_redirects — Default is 0. Set this to 1 for much faster downloads, and the returned download url will do an HTTP redirect to the final download URL.
+
+inject_version — the version of the resource injector for this download. You can use the %%__INJECT_VER__%% placeholder for this
+
+resource_id — the ID of the resource in question. You can use the %%__RESOURCE__%% placeholder for this
+
+user_id — the ID of the user in question. You can use the %%__USER__%% placeholder for this
+
+nonce — the nonce given to the download by Polymart. You can use the %%__NONCE__%% placeholder for this
+
+download_agent — the agent that downloaded the resource from Polymart. You can use the %%__AGENT__%% placeholder for this
+
+download_time — the time the resource was downloaded from Polymart. You can use the %%__TIMESTAMP__%% placeholder for this
+
+download_token — the download token from Polymart. You can use the %%__VERIFY_TOKEN__%% placeholder for this
+
+Response
+Format
+{
+    "request": "...",
+    "response": {
+        "success": "",
+        "result": {
+            "url": "",
+            "version": "",
+            "expires": ""
+        }
+    }
+}
+Example
+{
+    "request": "...",
+    "response": {
+        "success": true,
+        "result": {
+            "url": "https://voxel.shop/download/1/?param=arg...",
+            "version": "2.7.12",
+            "expires": 1786895186
+        }
+    }
+}
+Usage
+This is useful for auto-updaters for premium plugins. If the user is verified to have downloaded the resource, you can use response.result.url to download the latest version of the resource. However, this URL will expire at the unix timestamp given at response.result.expires.
+
+You should check response.result.version to make sure that a new version is in-fact available
+
+If the user did not purchase the plugin on Polymart, response.success will be false. Use this to verify that a given resource download is authentic. For example,
+
+https://api.voxel.shop/v1/requestUpdateURL/
+   ?download_token=MDAwY2QzZDk0MjdkYWNm
+   &user_id=1
+   &resource_id=4
+   &nonce=7318
+   &inject_version=1
+   &download_agent=000000
+   &download_time=1587928929
+
+All of these parameters should be gathered from %%__PLACEHOLDERS__%% in your resource file. Check the Parameters section above to see which parameter to pass where
+/v1/downloadLatestUpdate Back to top
+This is a simpler version of /v1/requestUpdateURL that either directly downloads an update or returns an error
+
+This only works for premium resources. If you'd like to build an auto-updater for a free resource, go to the resource page and then click "Get Direct Download Link" just below the "Post an Update" button. You can then use this link to provide a direct link for users to download your resource.
+
+Verifies that a given user has in-fact downloaded a resource from Polymart. If they have downloaded the resource from Polymart, and an update is available, this will download the latest update. If they didn't download the resource from Polymart or an update isn't available, this will throw an error. The parameters can be provided either as GET or as POST parameters.
+Parameters
+NOTE that ALL of these parameters are required. If you do not provide all of them, verification will always fail. In addition, this API call will only work if the resource as downloaded from Polymart (and not if it was purchased and downloaded on another marketplace). You can use the %%__POLYMART__%% placeholder to check this.
+
+greater_than_upload — download a a version greater than this upload ID. You MUST use the %%__UPLOAD__%% placeholder to get the upload ID of the downloaded file
+
+inject_version — the version of the resource injector for this download. You can use the %%__INJECT_VER__%% placeholder for this
+
+resource_id — the ID of the resource in question. You can use the %%__RESOURCE__%% placeholder for this
+
+user_id — the ID of the user in question. You can use the %%__USER__%% placeholder for this
+
+nonce — the nonce given to the download by Polymart. You can use the %%__NONCE__%% placeholder for this
+
+download_agent — the agent that downloaded the resource from Polymart. You can use the %%__AGENT__%% placeholder for this
+
+download_time — the time the resource was downloaded from Polymart. You can use the %%__TIMESTAMP__%% placeholder for this
+
+download_token — the download token from Polymart. You can use the %%__VERIFY_TOKEN__%% placeholder for this
+
+Response
+If...	HTTP Response Code	Response Body
+The user is a buyer on Polymart AND an update is available	200	The file of the latest update
+No new updates are available	404	JSON. See Body for an invalid request below
+The user could not be verified as a buyer	401	JSON. See Body for an invalid request below
+The request was invalid for some other reason	400	JSON. See Body for an invalid request below
+Body for an invalid request
+{
+    "request": "...",
+    "response": {
+        "success": "false",
+        "reason": "",
+        "message": ""
+    }
+}
+Usage
+This is useful for auto-updaters for premium plugins. If the user is verified to have downloaded the resource, and an update is available, this endpoint will give you the latest update file, and give an HTTP status of 200 If the user
+
+If the user did not purchase the plugin on Polymart, they were removed from the buyers list, or an update is not available, this endpoint will give an error HTTP status, and the body of the response will be JSON that goes into further detail.
+
+For example, a valid request might look like this (this will start a file download)
+
+https://api.voxel.shop/v1/downloadLatestUpdate/
+   ?download_token=MDAwY2QzZDk0MjdkYWNm
+   &greater_than_upload=384
+   &user_id=1
+   &resource_id=4
+   &nonce=7318
+   &inject_version=1
+   &download_agent=000000
+   &download_time=1587928929
+
+and an invalid request because there isn't an update available (HTTP Error Code 404)
+
+https://api.voxel.shop/v1/downloadLatestUpdate/
+   ?download_token=MDAwY2QzZDk0MjdkYWNm
+   ?greater_than_upload=9876543210
+   &user_id=1
+   &resource_id=4
+   &nonce=7318
+   &inject_version=1
+   &download_agent=000000
+   &download_time=1587928929
+
+All of these parameters should be gathered from %%__PLACEHOLDERS__%% in your resource file. Check the Parameters section above to see which parameter to pass where
+/v1/getResourceInfo Back to top
+Gets information about a resource.
+Parameters
+api_key — optional — your API key. If you're the resource author, you can pass your API key here to get more info about the resource. If you don't yet have an API key, visit your account settings to generate one. Security Warning because an API key allows access to your entire account, you should never use it on client-side code. If you don't know what that means, don't use this action.
+
+resource_id — the ID of the resource you'd like to check. This is the number at the end of your resource's link on Polymart. For example, https://voxel.shop/resource/item-bridge.4 has the ID 4
+
+Response
+Format
+{
+    "request": "...",
+    "response": {
+        "success": "",
+        "resource": {
+            "id": "",
+            "title": "",
+            "subtitle": "",
+            "price": "",
+            "currency": "<3-digit currency code>",
+            "downloads": "",
+            "thumbnailURL": "",
+            "headerURL": "",
+            "creationTime": "",
+            "supportedMinecraftVersions": [
+                "",
+                "",
+                ""
+            ],
+            "owner": {
+                "name": "",
+                "id": "",
+                "type": "",
+                "url": ""
+            },
+            "updates": {
+                "latest": {
+                    "id": "",
+                    "version": "",
+                    "title": "",
+                    "description": "",
+                    "time": "",
+                    "snapshot": "",
+                    "beta": ""
+                }
+            },
+            "reviews": {
+                "count": "",
+                "stars": ""
+            },
+            "url": ""
+        },
+        "errors": {
+            "global": ""
+        }
+    }
+}
+Example
+{
+    "request": "...",
+    "response": {
+        "success": true,
+        "resource": {
+            "id": "4",
+            "title": "Item Bridge",
+            "subtitle": "Use one plugin's items in other plugins",
+            "price": "0.00",
+            "currency": "USD",
+            "downloads": 24716,
+            "thumbnailURL": "https://s3.amazonaws.com/polymart.product.thumbnails/default/4",
+            "headerURL": null,
+            "creationTime": "1587437238",
+            "supportedMinecraftVersions": [
+                "1.19",
+                "1.18",
+                "1.17"
+            ],
+            "owner": {
+                "name": "jojodmo",
+                "id": "1",
+                "type": "user",
+                "url": "https://voxel.shop/user/jojodmo.1"
+            },
+            "updates": {
+                "latest": {
+                    "id": "384",
+                    "version": "2.0",
+                    "title": "New methods for Developers",
+                    "description": "This version brings a ton of exiting changes for developers",
+                    "time": "1595888974",
+                    "snapshot": "0",
+                    "beta": "0"
+                }
+            },
+            "reviews": {
+                "count": 17,
+                "stars": 4.8235
+            },
+            "url": "https://voxel.shop/resource/item-bridge.4"
+        }
+    }
+}
+Usage
+Here's an example API call
+
+https://api.voxel.shop/v1/getResourceInfo
+   ?resource_id=4
+/v1/getResourceInfoSimple Back to top
+Gets a single data point about a resource, without any encoding
+Parameters
+key — the data point to get. Currently valid options are title, subtitle, version, price, and lastUpdateTime.
+
+resource_id — the ID of the resource you'd like to check. This is the number at the end of your resource's link on Polymart. For example, https://voxel.shop/resource/item-bridge.4 has the ID 4
+
+Response
+The response is a single, unencoded data point in the text/plain encoding.
+Usage
+Here's an example API call
+
+https://api.voxel.shop/v1/getResourceInfoSimple
+   ?resource_id=4
+   &key=title
+/v1/getResourceUpdates Back to top
+Gets a list of updates to a resource
+Parameters
+resource_id — the ID of the resource you'd like to check. This is the number at the end of your resource's link on Polymart. For example, https://voxel.shop/resource/item-bridge.4 has the ID 4
+
+start — optional — the index that searching should start from. By default this is 0.
+
+limit — optional — the maximum number of results that can be returned. By default, this is 25, but you can set this to anything between 5 and 50.
+
+Response
+Format
+{
+    "request": "...",
+    "response": {
+        "success": "",
+        "result_count": "",
+        "more": "",
+        "next_start": "",
+        "total": "",
+        "remaining": "",
+        "resource": {
+            "id": ""
+        },
+        "updates": [
+            {
+                "id": "",
+                "url": "",
+                "version": "",
+                "title": "",
+                "description": "",
+                "time": "",
+                "downloadReady": "",
+                "snapshot": "",
+                "beta": ""
+            },
+            {
+                "...": ""
+            },
+            {
+                "...": ""
+            }
+        ],
+        "errors": {
+            "global": ""
+        }
+    }
+}
+Example
+{
+    "request": "...",
+    "response": {
+        "success": true,
+        "result_count": 2,
+        "more": true,
+        "next_start": 2,
+        "total": 8,
+        "remaining": 6,
+        "resource": {
+            "id": 4
+        },
+        "updates": [
+            {
+                "id": 6915,
+                "version": "3.1",
+                "url": "https://voxel.shop/r/4/updates?update=6915",
+                "title": "New \"didSetBlock\" listener",
+                "description": "This version adds a new \"didSetBlock\" listener for plugins",
+                "time": 1629520547,
+                "downloadReady": true,
+                "snapshot": false,
+                "beta": false
+            },
+            {
+                "id": 3212,
+                "version": "3.0.1",
+                "url": "https://voxel.shop/r/4/updates?update=3212",
+                "title": "New isItemStack(ItemStack, String) method",
+                "description": "This version adds the convenience method ItemBridge.isItemStack(ItemStack, String) for developers",
+                "time": 1614223914,
+                "downloadReady": true,
+                "snapshot": false,
+                "beta": false
+            }
+        ],
+        "errors": {
+            "global": ""
+        }
+    }
+}
+Usage
+Here's an example API call
+
+https://api.voxel.shop/v1/getResourceUpdates
+   ?resource_id=4
+   &start=0
+   &limit=5
+/v1/postUpdate Back to top
+Uploads a new version for one of your resources. This must be sent as a multipart/form-data POST request. An example JavaScript/HTML form for submitting an update is included below.
+Parameters
+api_key — your API key. This API key will need the "Post Updates" permission. If you don't yet have an API key, visit your account settings to generate one. Security Warning because an API key allows access to your entire account, you should never use it on client-side code. If you don't know what that means, don't use this action.
+
+resource_id — the ID of the resource you'd like to post an update to. This is the number at the end of your resource's link on Polymart. For example, https://voxel.shop/resource/item-bridge.4 has the ID 4
+
+version — the new version string, like "1.0" or "2.6.7"
+title — the title for your new update
+message — the message for your new update. You can use BBCode here
+file — the new file you're uploading.
+
+beta (optional) — set this to "1" to mark this version as a beta version.
+snapshot (optional) — set this to "1" to mark this version as a snapshot version
+Response
+Format
+{
+    "request": "...",
+    "response": {
+        "success": "",
+        "errors": {
+            "global": "",
+            "file": "",
+            "version": "",
+            "title": "",
+            "message": ""
+        },
+        "update": {
+            "id": "",
+            "version": "",
+            "beta": "",
+            "snapshot": ""
+        },
+        "resource": {
+            "id": ""
+        }
+    }
+}
+Example
+{
+    "request": "...",
+    "response": {
+        "success": true,
+        "errors": [],
+        "update": {
+            "id": 17263,
+            "version": "3.6",
+            "beta": false,
+            "snapshot": false
+        },
+        "resource": {
+            "id": 4
+        }
+    }
+}
+Usage
+Use this to post an update to your resource. Here's a HTML/JavaScript implementation of the API action (Remember: NEVER share your API keys)
+<html>
+<body>
+    <form>
+        New Version: <input type="text" id="update-ver"><br>
+        Update Title: <input type="text" id="update-title"><br>
+        Update Message: <input type="text" id="update-desc"><br><br>
+
+        File: <input type="file" id="file-input"><br><br>
+
+        <a href="javascript:void(0)" onclick="pushUpdate()">Send Update</a>
+    </form>
+
+    <script type="text/javascript">
+        function pushUpdate(){
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if(this.readyState === 4){
+                    let json = JSON.parse(this.responseText);
+                    // use the response json in "json"
+                }
+            };
+
+            xhttp.open("POST", `https://api.voxel.shop/v1/postUpdate`, true);
+            xhttp.setRequestHeader("enctype", "multipart/form-data"); // It's important to set this
+
+            let formData = new FormData();
+
+            formData.append("resource_id", "YOUR RESOURCE ID")
+            formData.append("version", document.getElementById("update-ver").value)
+            formData.append("title", document.getElementById("update-title").value)
+            formData.append("message", document.getElementById("update-desc").value)
+            formData.append("file", document.getElementById("file-input").files[0])
+            formData.append("api_key", "YOUR API KEY");
+
+            xhttp.send(formData);
+        }
+    </script>
+</body>
+</html>
+/v1/getResourceUserData Back to top
+Gets information about a resource purchase for a given user. DO NOT USE THIS FOR VERIFYING DOWNLOADS. To verify a download, use the /v1/verifyPurchase action. All data must be sent as a POST request
+Parameters
+api_key — your API key. If you don't yet have an API key, visit your account settings to generate one. Security Warning because an API key allows access to your entire account, you should never use it on client-side code. If you don't know what that means, don't use this action.
+
+resource_id — the ID of the resource you'd like to check. This is the number at the end of your resource's link on Polymart. For example, https://voxel.shop/resource/item-bridge.4 has the ID 4
+
+user_id — the ID of the user that you'd like to check. To verify a user and get their user ID, use the /v1/generateUserVerifyURL and /v1/verifyUser actions
+Response
+Format
+{
+    "request": "...",
+    "response": {
+        "success": "",
+        "resource": {
+            "id": "",
+            "purchaseValid": "",
+            "purchaseStatus": "",
+            "purchaseTime": ""
+        },
+        "user": {
+            "id": ""
+        },
+        "errors": {
+            "global": ""
+        }
+    }
+}
+Example
+{
+    "request": "...",
+    "response": {
+        "success": true,
+        "resource": {
+            "id": "4",
+            "purchaseValid": true,
+            "purchaseStatus": "Confirmed",
+            "purchaseTime": 1786894886
+        },
+        "user": {
+            "id": 747856
+        }
+    }
+}
+/v1/addBuyer Back to top
+Adds a buyer to your resource. All data must be sent as a POST request
+Parameters
+api_key — your API key. This API key will need the "Add & Edit Buyers" permission. If you don't yet have an API key, visit your account settings to generate one. Security Warning because an API key allows access to your entire account, you should never use it on client-side code. If you don't know what that means, don't use this action.
+
+resource_id — the ID of the resource you'd like to check. This is the number at the end of your resource's link on Polymart. For example, https://voxel.shop/resource/item-bridge.4 has the ID 4
+
+user_id — the ID of the user that you'd like to add as a buyer. To verify a user and get their user ID, use the /v1/generateUserVerifyURL and /v1/verifyUser actions.
+Response
+Format
+{
+    "request": "...",
+    "response": {
+        "success": "",
+        "resource": {
+            "id": "",
+            "previousPurchaseValid": "",
+            "previousPurchaseStatus": ""
+        },
+        "user": {
+            "id": ""
+        },
+        "errors": {
+            "global": ""
+        }
+    }
+}
+Example
+{
+    "request": "...",
+    "response": {
+        "success": true,
+        "resource": {
+            "id": "4",
+            "previousPurchaseValid": true,
+            "previousPurchaseStatus": "Confirmed"
+        },
+        "user": {
+            "id": 681148
+        }
+    }
+}
+/v1/importExternalBuyer Back to top
+Imports a buyer from an external website (such as SpigotMC, BBB, etc) to Polymart! All data must be sent as a POST request
+
+After you import a buyer, the user can claim their license on Polymart by clicking the "Purchase" button on your resource, and then "Already purchased somewhere else?" in the popup. For more info, go to the "Buyers" tab on your resource, and click "Import Buyers" at the top.
+Parameters
+api_key — your API key. This API key will need the "Add & Edit Buyers" permission. If you don't yet have an API key, visit your account settings to generate one. Security Warning because an API key allows access to your entire account, you should never use it on client-side code. If you don't know what that means, don't use this action.
+
+resource_id — the ID of the resource you'd like to check. This is the number at the end of your resource's link on Polymart. For example, https://voxel.shop/resource/item-bridge.4 has the ID 4
+
+external_user_id — the numeric ID of the user from the external website, like SpigotMC or BBB.
+
+external_user_payment_email — the email address the user used to PAY on the external website (Note that, for privacy, this is peppered and hashed before it's stored)
+
+payment_transaction_id — the transaction ID from the original payment
+
+external_site_name — the name of the external site, like "spigot", "bbb", or something else. This is just for tracking purposes.
+Response
+Format
+{
+    "request": "...",
+    "response": {
+        "success": "",
+        "import": {
+            "id": ""
+        },
+        "errors": {
+            "global": ""
+        }
+    }
+}
+Example
+{
+    "request": "...",
+    "response": {
+        "success": true,
+        "import": {
+            "id": "4"
+        }
+    }
+}
+/v1/addCouponCode Back to top
+Adds a coupon code to your resource. If the coupon code already exists, this modifies the coupon code. All data must be sent as a POST request
+Parameters
+api_key — your API key. This API key will need the "Add & Edit Buyers" permission. If you don't yet have an API key, visit your account settings to generate one. Security Warning because an API key allows access to your entire account, you should never use it on client-side code. If you don't know what that means, don't use this action.
+
+resource_id — the ID of the resource you'd like to check. This is the number at the end of your resource's link on Polymart. For example, https://voxel.shop/resource/item-bridge.4 has the ID 4
+
+coupon — the coupon code that you'd like to add or edit. This code must be between 3 and 30 characters long, and can only contain letters, numbers, and dashes, and is NOT case-sensitive
+
+percent — the percentage off you want to give buyers when using this coupon. For example, '15' would be 15 percent off. Either this or amount is required, and this can not bring the resource price below $0.75
+
+amount — the amount off you want to give buyers when using this coupon. For example, '2.25' would be $2.25 off if the price were in USD. Either this or percent is required, and this can not bring the resource price below $0.75
+
+max_uses — the maximum number of times this coupon can be used. Setting this DOES NOT reset the current number of times the coupon has been used. Don't set this or set it to 0 to allow this coupon to be used unlimited times
+
+delete — set this to "1" if you would like to delete this coupon code
+
+Response
+Format
+{
+    "request": "...",
+    "response": {
+        "success": "",
+        "message": "",
+        "errors": {
+            "global": "",
+            "coupon": ""
+        }
+    }
+}
+Example
+{
+    "request": "...",
+    "response": {
+        "success": true,
+        "message": "Coupon 'SECRET-COUPON' created"
+    }
+}
+/v1/generateUserVerifyURL Back to top
+This action generates a URL for verifying a Polymart user. To verify a user, call this action and then send the user to the URL in the response. They'll be given a token you can use to verify their Polymart account. You'll pass this token to /v1/verifyUser to verify the user and get their user ID.
+
+The token will contain only letters, numbers, and dashes, and is not case-sensitive. The token that the user is given expires in 30 minutes. Make sure to verify it quickly!
+
+For example, you could use this to verify users on your Discord server.
+
+If you're looking to get access to a user's resources (say, if you're a server host and want to allow users to download their premium resources), use /v1/authorizeUser instead
+Parameters
+service — The unique name of your service — it's recommended that you use reverse-domain format for this to ensure uniqueness. For example, com.jojodmo.CustomItems or org.polymart.PolymartExample
+
+nonce (optional) — For added security, pass a unique, random value here. This ensures that tokens can't be re-used. However, you'll need to pass the same nonce when verifying the user with the /v1/verifyUser action.
+
+redirect (optional) — If you provide a URL here (must be url-encoded), the user will instantly be redirected to this location, and the GET parameter "token" will be set to the verification token.
+
+Response
+Format
+{
+    "request": "...",
+    "response": {
+        "success": "",
+        "result": {
+            "url": ""
+        }
+    }
+}
+Example
+{
+    "request": "...",
+    "response": {
+        "success": true,
+        "result": {
+            "url": "https://voxel.shop/verifyUser?service=example"
+        }
+    }
+}
+Usage
+Here's an example API call
+
+https://api.voxel.shop/v1/generateUserVerifyURL
+   ?service=org.polymart.DeveloperAPIExample
+   &nonce=3ZvbLiEBaeB1
+
+Here's an example API call with redirection
+
+https://api.voxel.shop/v1/generateUserVerifyURL
+   ?service=org.polymart.DeveloperAPIExample
+   &nonce=3ZvbLiEBaeB1
+   &redirect=https%3A%2F%2Fvoxel.shop%2Fwiki%2Fapi%23generateUserVerifyURL
+/v1/verifyUser Back to top
+Verifies a Polymart user given a token from /v1/generateUserVerifyURL
+
+For example, You could use this to verify users on your Discord server.
+Parameters
+service — The unique name of your service — this MUST be the same thing you passed in /v1/generateUserVerifyURL
+
+nonce (optional) — This MUST be the same thing you passed in /v1/generateUserVerifyURL
+
+token — The token that the user gives you
+Response
+Format
+{
+    "request": "...",
+    "response": {
+        "success": "",
+        "result": {
+            "user": {
+                "id": ""
+            }
+        }
+    }
+}
+Example
+{
+    "request": "...",
+    "response": {
+        "success": true,
+        "result": {
+            "user": {
+                "id": 25626
+            }
+        }
+    }
+}
+Usage
+Here's an example API call (notice how service and nonce are the same as in the /v1/generateUserVerifyURL example above). Log in to generate a valid API call
+
+https://api.voxel.shop/v1/verifyUser
+   ?service=org.polymart.DeveloperAPIExample
+   &nonce=3ZvbLiEBaeB1
+   &token=7AY-NHY
+/v1/getAccountInfo Back to top
+Gets information about either a user or shop on Polymart
+Parameters
+user_id — The user's ID, if you'd like to get information about a user. If you'd like information about a shop, use shop_id instead
+
+shop_id — The shop's ID, if you'd like to get information about a shop. If you'd like information about a user, use user_id instead
+Response
+Format
+{
+    "request": "...",
+    "response": {
+        "success": "",
+        "": {
+            "id": "",
+            "username": "",
+            "discordId": "",
+            "type": "",
+            "profilePictureURL": "",
+            "statistics": {
+                "resourceCount": "",
+                "resourceDownloads": "",
+                "resourceRatings": "",
+                "resourceAverageRating": ""
+            }
+        }
+    }
+}
+Example
+{
+    "request": "...",
+    "response": {
+        "success": true,
+        "shop": {
+            "id": "1",
+            "username": "Polymart",
+            "type": "shop",
+            "discordId": "",
+            "profilePictureURL": "https://s3.amazonaws.com/polymart.shop.profilepictures/default/1",
+            "statistics": {
+                "resourceCount": 1,
+                "resourceDownloads": 200573,
+                "resourceRatings": 3771,
+                "resourceAverageRating": 4.8
+            }
+        }
+    }
+}
+Usage
+Here's an example API call for a user
+
+https://api.voxel.shop/v1/getAccountInfo
+   ?user_id=1
+
+Here's an example API call for a shop
+
+https://api.voxel.shop/v1/getAccountInfo
+   ?shop_id=1
+/v1/getUserId Back to top
+Gets a user's ID given their username
+Parameters
+username — The user's username
+Response
+Format
+{
+    "request": "...",
+    "response": {
+        "success": "",
+        "user": {
+            "id": "",
+            "username": ""
+        }
+    }
+}
+Example
+{
+    "request": "...",
+    "response": {
+        "success": true,
+        "user": {
+            "id": "1",
+            "username": "jojodmo"
+        }
+    }
+}
+Usage
+Here's an example API call
+
+https://api.voxel.shop/v1/getUserId
+   ?username=jojodmo
+/v1/getUserData Back to top
+Gets information about a given user. DO NOT USE THIS FOR VERIFYING DOWNLOADS. To verify a download, use the /v1/verifyPurchase action. All data must be sent as a POST request.
+
+Parameters
+api_key — your API key. If you don't yet have an API key, visit your account settings to generate one. Security Warning because an API key allows access to your entire account, you should never use it on client-side code. If you don't know what that means, don't use this action.
+
+user_id — the ID of the user that you'd like to check. To verify a user and get their user ID, use the /v1/generateUserVerifyURL and /v1/verifyUser actions
+Response
+Format
+{
+    "request": "...",
+    "response": {
+        "success": "",
+        "resources": [
+            {
+                "id": "",
+                "title": "",
+                "subtitle": "",
+                "purchaseValid": "",
+                "purchaseStatus": "",
+                "downloaded": "",
+                "purchaseTime": ""
+            },
+            {
+                "id": "",
+                "title": "",
+                "subtitle": "",
+                "purchaseValid": "",
+                "purchaseStatus": "",
+                "downloaded": "",
+                "purchaseTime": ""
+            },
+            {
+                "...": "..."
+            }
+        ],
+        "user": {
+            "id": "",
+            "username": "",
+            "profilePictureURL": ""
+        },
+        "errors": {
+            "global": ""
+        }
+    }
+}
+Example
+{
+    "request": "...",
+    "response": {
+        "success": "true",
+        "resources": [
+            {
+                "id": "1",
+                "title": "Custom Items",
+                "price": "16.00",
+                "currency": "USD",
+                "url": "https://voxel.shop/resource/custom-items.1",
+                "subtitle": "Make any item/block you imagine, without mods or replacing items",
+                "purchaseValid": true,
+                "purchaseStatus": "Confirmed",
+                "downloaded": true,
+                "purchaseTime": 1786894886
+            },
+            {
+                "id": "296",
+                "title": "MCJava",
+                "price": "4.00",
+                "currency": "USD",
+                "url": "https://voxel.shop/resource/mcjava.296",
+                "subtitle": "Run Java Code from the Chat \u2022 Code plugins completely in-game",
+                "purchaseValid": true,
+                "purchaseStatus": "Manual",
+                "downloaded": true,
+                "purchaseTime": 1786894886
+            },
+            {
+                "id": "4",
+                "title": "Item Bridge",
+                "price": "0.00",
+                "url": "https://voxel.shop/resource/item-bridge.4",
+                "subtitle": "Use items from one plugin with another plugin",
+                "purchaseValid": true,
+                "purchaseStatus": "Free",
+                "downloaded": true,
+                "purchaseTime": null
+            }
+        ],
+        "user": {
+            "id": 90579,
+            "username": "AnonymousFox",
+            "profilePictureURL": null
+        },
+        "errors": []
+    }
+}
+/v1/listBuyers Back to top
+Lists buyers on a resource. DO NOT USE THIS FOR VERIFYING DOWNLOADS. To verify a download, use the /v1/verifyPurchase action. All data must be sent as a POST request.
+
+Parameters
+api_key — your API key. This API key must have "list resources & buyers" permission. If you don't yet have an API key, visit your account settings to generate one. Security Warning because an API key allows access to your entire account, you should never use it on client-side code. If you don't know what that means, don't use this action.
+
+resource_id — the ID of the resource that you'd like to check. This is the number at the end of your resource's page. For example, voxel.shop/resource/polymart-plugin.323 has the ID 323
+
+start — optional — the index that searching should start from. By default this is 0.
+Response
+Format
+{
+    "request": "...",
+    "response": {
+        "success": "",
+        "more": "",
+        "total": "",
+        "remaining": "",
+        "next_start": "",
+        "buyers": [
+            {
+                "userID": "",
+                "price": "",
+                "currency": "",
+                "status": "",
+                "valid": "",
+                "fromBundle": "",
+                "purchaseTime": "",
+                "paymentProvider": ""
+            },
+            {
+                "userID": "",
+                "price": "",
+                "currency": "",
+                "status": "",
+                "valid": "",
+                "fromBundle": "",
+                "purchaseTime": "",
+                "paymentProvider": ""
+            },
+            {
+                "...": "..."
+            }
+        ],
+        "resource": {
+            "id": ""
+        },
+        "errors": {
+            "global": ""
+        }
+    }
+}
+Example
+{
+    "request": "...",
+    "response": {
+        "success": true,
+        "more": true,
+        "total": 8200,
+        "remaining": 1400,
+        "next_start": 194773,
+        "buyers": [
+            {
+                "userID": 1,
+                "price": "14.40",
+                "currency": "USD",
+                "status": "COMPLETED",
+                "valid": true,
+                "fromBundle": null,
+                "purchaseTime": 1786894886,
+                "paymentProvider": "paypal"
+            },
+            {
+                "userID": 4,
+                "price": "0",
+                "currency": "USD",
+                "status": "2024 Giveaway",
+                "valid": true,
+                "fromBundle": null,
+                "purchaseTime": 1705990692,
+                "paymentProvider": null
+            }
+        ],
+        "resource": {
+            "id": 323
+        }
+    }
+}
+/v1/authorizeUser Back to top
+Request access to download resources on a user's behalf. If you're looking for something just to verify a user (say, for example, to verify buyers on your Discord server), use /v1/verifyUser instead.
+
+Parameters
+service — the domain from which you're going to make API calls. For example, "api.jojodmo.com" or "skiplit.com"
+
+return_url — the URL that the user will be redirected to upon either allowing or denying access to their account.
+IMPORTANT: the domain for this URL must exactly match the one given in service. For example, if your return_url is "https://skiplit.com/polymartResponse", service must be "skiplit.com". Anything else will cause an error.
+
+return_token — Polymart must authorize you to use this parameter before you do. If you haven't yet received authorization from us, please Contact Us first. Set this to "1" if you want this request to return "token" in response.result.
+
+state — a secure, random string that can be used to verify that the response you get in return_url is in-fact valid. If this isn't random, then an attacker could send an invalid token back to your service and trick you into thinking that it is valid. This should only contain URL-safe characters, like letters, numbers, dashes and underscores.
+Response
+Format
+{
+    "request": "...",
+    "response": {
+        "success": "",
+        "result": {
+            "url": "",
+            "token": ""
+        }
+    }
+}
+Example
+{
+    "request": "...",
+    "response": {
+        "success": true,
+        "result": {
+            "url": "https://voxel.shop/linkAccount/?param=value...",
+            "token": ""
+        }
+    }
+}
+Usage
+After making the request, redirect the user to the URL in response.result.url
+After the user either denies or accepts the request, they will be returned to the parameter you gave for return_url.
+
+If the user denies the request, they will be redirected and the POST parameter success will be 0.
+
+If the user accepts the request, they will be redirected, and there will be two POST parameters passed along: success will be 1, and token will be the token you can use to make downloads on the user's behalf. The token will be less than 255 characters long. Store this in a secure place. The token will expire after a given amount of time, after which you will need to request authorization from the user again. As of now, tokens expire every 365 days, but this could change.
+
+If you set return_token=1 notice that the API action also contains response.result.token. This is the the token that will be validated by the user. You can use /v1/verifyAuthToken to check whether or not the token is valid, and asynchronously verify the token.
+
+Example
+Here is an example of a call to /v1/authorizeUser. For example, you might make a request to https://api.voxel.shop/v1/authorizeUser with the following POST parameters:
+service = api.skiplit.com
+return_url = https://api.skiplit.com/polymartResponse
+return_token = 1
+state = MM-UW_oJYaq_ruWPm4pTpiTY
+
+Then, you would check that response.result.success is true. If it is, you would redirect the user to the URL in response.result.url.
+
+The user would then be taken to a page on Polymart, and asked if they want to give your service access to download plugins on their behalf. Once they enter their password and confirm the request, the user will be redirected back to the return_url you provided, and information about the user would be passed along in the POST parameters.
+
+In this example, the user would be returned to the URL https://api.skiplit.com/polymartResponse. In the POST parameters, you'll see three things:
+success will be 1 if the user confirmed the request, and 0 if they didn't.
+token will be a token that you can use to make downloads on the user's behalf.
+state will be the same value as the one you passed when you were making the original call to /v1/authorizeUser. If it isn't the same, then you know an attacker is trying to trick you into thinking an invalid token is in-fact valid.
+
+For example, you might get these values in the POST parameters of https://api.skiplit.com/polymartResponse:
+success = 1
+token = A6kVowCTKzdJcn9M0qZ55E7b
+state = MM-UW_oJYaq_ruWPm4pTpiTY
+
+The token will be less than 255 characters long. You should store the token in a secure location, and you can later use this token in other requests to the Polymart API. For example, you could pass this token along in the POST data of /v1/verifyAuthToken to verify that the token is valid and has not expired.
+
+Working Example
+Here is a working example for a call to /v1/authorizeUser.
+When you click the link, the following are also sent as POST parameters:
+
+    service = voxel.shop
+    return_url = https://voxel.shop/wiki/api#authorize-user-form
+    state = MM-UW_oJYaq_ruWPm4pTpiTY (a secure, random string)
+
+https://api.voxel.shop/v1/authorizeUser
+
+If you open the link given in response.result.url in your browser, you will see the results shown below. These are sent as POST parameters back to whatever return_url was set to (in this case, they're set as POST parameters back to this page)
+
+(nothing received yet! Visit the URL given in response.result.url to test out this API call)
+/v1/verifyAuthToken Back to top
+Verifies a user's token.
+Parameters
+token — a token for the user. This MUST be sent in the POST parameters of the request. If you don't yet have a token for the user, read about the the /v1/authorizeUser action.
+Response
+Format
+{
+    "request": "...",
+    "response": {
+        "success": "",
+        "result": {
+            "success": true,
+            "message": "",
+            "user": {
+                "id": ""
+            },
+            "expires": ""
+        }
+    }
+}
+Example
+{
+    "request": "...",
+    "response": {
+        "success": true,
+        "result": {
+            "success": true,
+            "message": "SUCCESS",
+            "user": {
+                "id": "72631"
+            },
+            "expires": 1789486886
+        }
+    }
+}
+Usage
+Use this to verify that a token that you have for a user is valid and has not expired. For example, when you click the link below, the following are also sent as POST parameters:
+
+    token = eyJpZCI6Ii4xNzg2ODk0ODg2IiwidmFsIjoicDJpZmgtYkI4cGxuSnRpdCIsInNieCI6MX0
+
+
+https://api.voxel.shop/v1/verifyAuthToken
+/v1/invalidateAuthToken Back to top
+Invalidates a user's token. For security reasons, you should call this if a user ever decides to un-link their Polymart account with your service.
+Parameters
+token — a token for the user. This MUST be sent in the POST parameters of the request.
+Response
+Format
+{
+    "request": "...",
+    "response": {
+        "success": "",
+        "result": {
+            "message": ""
+        }
+    }
+}
+Example
+{
+    "request": "...",
+    "response": {
+        "success": true,
+        "result": {
+            "message": "SUCCESS"
+        }
+    }
+}
+/v1/getDownloadURL Back to top
+Gets a URL that can be used to download a resource on a user's behalf. The resulting URL might do an HTTP redirect before the final download. Make sure that you properly handle redirects.
+Parameters
+allow_redirects — IMPORTANT BREAKING CHANGE — Set this to 0 to disable HTTP redirects from the download URL. The current default is 0. In the future, this will become 1 by default, and soon after, the option to disable redirects will be removed altogether.
+
+resource_id — the ID of the resource that you would like to download on the user's behalf. This is the number after /resource/ (and after the period) on a Polymart resource page. For example, https://voxel.shop/resource/item-bridge.4 has resource_id = "4"
+
+token — a token for the user. It is recommended that you pass this as a POST parameter for free resources, but it isn't strictly necessary. This MUST be sent as a POST paramater for premium resources. If you don't yet have a token for the user, read about the the /v1/authorizeUser action.
+Response
+Format
+{
+    "request": "...",
+    "response": {
+        "success": "",
+        "message": "",
+        "result": {
+            "url": "",
+            "version": "",
+            "expires": ""
+        }
+    }
+}
+Example
+{
+    "request": "...",
+    "response": {
+        "success": true,
+        "message": "SUCCESS",
+        "result": {
+            "url": "https://voxel.shop/download/?param=value...",
+            "version": "2.17.4",
+            "expires": 1786894946
+        }
+    }
+}
+Usage
+After making the request, you may download the resource from the URL response.result.url In normal cases, this will start the download of the resource.
+
+However, if the download can not proceed (either because the user does not have permission to download the resource, or because the download link is expired), then the URL will return a 400 Bad Request error, and the result will be a JSON string containing an explanation of the problem.
+
+For example, when you click the link below, the following are also sent as POST parameters:
+
+    resource_id = 4
+    token = eyJpZCI6Ii4xNzg2ODk0ODg2IiwidmFsIjoicDJpZmgtYkI4cGxuSnRpdCIsInNieCI6MX0
+
+
+https://api.voxel.shop/v1/getDownloadURL
