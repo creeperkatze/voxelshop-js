@@ -32,7 +32,7 @@ export class VoxelShopClientCore {
     this.#apiKey = options.apiKey;
     this.#timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.#userAgent = options.userAgent;
-    this.#fetch = options.fetch ?? globalThis.fetch;
+    this.#fetch = options.fetch ?? globalThis.fetch.bind(globalThis);
   }
 
   /** The default API key configured on this client, used when a method's `apiKey` parameter is omitted. */
